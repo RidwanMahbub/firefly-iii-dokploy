@@ -1,6 +1,6 @@
 # Firefly III on Dokploy
 
-Ready-to-use Docker Compose setups for deploying [Firefly III](https://www.firefly-iii.org/) on [Dokploy](https://dokploy.com/). The official Firefly III Docker tutorials use multiple separate `.env` files, which Dokploy doesn't support (as of ersion v0.29.2) — these templates merge them into a single environment variable setup that works seamlessly with Dokploy's UI.
+Ready-to-use Docker Compose setups for deploying [Firefly III](https://www.firefly-iii.org/) on [Dokploy](https://dokploy.com/). The official Firefly III Docker tutorials use multiple separate `.env` files, which Dokploy doesn't support (as of Version v0.29.2) — these templates merge them into a single environment variable setup that works seamlessly with Dokploy's UI.
 
 ---
 
