@@ -64,4 +64,5 @@ The `cron` service runs automatically and calls the Firefly III cron endpoint da
 ## Resources
 
 - [Firefly III Documentation](https://docs.firefly-iii.org/)
+- [Firefly III Docker Compose Tutorial](https://docs.firefly-iii.org/how-to/firefly-iii/installation/docker/)
 - [Dokploy Documentation](https://docs.dokploy.com/)
