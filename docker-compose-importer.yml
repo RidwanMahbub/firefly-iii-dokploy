@@ -1,0 +1,113 @@
+services:
+  app:
+    image: fireflyiii/core:latest
+    hostname: app
+    container_name: firefly_iii_core
+    networks:
+      - firefly_iii
+    restart: always
+    volumes:
+      - firefly_iii_upload:/var/www/html/storage/upload
+    # No ports: block — Dokploy/Traefik handles routing. Set target port to 8080 in Dokploy Domains tab.
+    depends_on:
+      - db
+    environment:
+      - APP_ENV=${APP_ENV}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_KEY=${APP_KEY}
+      - APP_URL=${APP_URL}
+      - APP_NAME=${APP_NAME}
+      - SITE_OWNER=${SITE_OWNER}
+      - TZ=${TZ}
+      - DEFAULT_LANGUAGE=${DEFAULT_LANGUAGE}
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES}
+      - LOG_CHANNEL=${LOG_CHANNEL}
+      - APP_LOG_LEVEL=${APP_LOG_LEVEL}
+      - AUDIT_LOG_LEVEL=${AUDIT_LOG_LEVEL}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CACHE_DRIVER=${CACHE_DRIVER}
+      - SESSION_DRIVER=${SESSION_DRIVER}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION}
+      - STATIC_CRON_TOKEN=${STATIC_CRON_TOKEN}
+      - FIREFLY_III_LAYOUT=${FIREFLY_III_LAYOUT}
+
+  db:
+    image: mariadb:lts
+    hostname: db
+    container_name: firefly_iii_db
+    networks:
+      - firefly_iii
+    restart: always
+    volumes:
+      - firefly_iii_db:/var/lib/mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+
+  importer:
+    image: fireflyiii/data-importer:latest
+    hostname: importer
+    restart: always
+    container_name: firefly_iii_importer
+    networks:
+      - firefly_iii
+    # No ports: block — Dokploy/Traefik handles routing. Set target port to 8080 in Dokploy Domains tab.
+    # Uncomment and set the path below if you want to import from a local directory:
+    # volumes:
+    #   - /your-path-here/to/import:/import
+    depends_on:
+      - app
+    environment:
+      - FIREFLY_III_URL=${FIREFLY_III_URL}
+      - VANITY_URL=${VANITY_URL}
+      - FIREFLY_III_ACCESS_TOKEN=${FIREFLY_III_ACCESS_TOKEN}
+      - FIREFLY_III_CLIENT_ID=${FIREFLY_III_CLIENT_ID}
+      - TZ=${TZ}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES}
+      - LOG_LEVEL=${IMPORTER_LOG_LEVEL}
+      - APP_ENV=${APP_ENV}
+      - APP_DEBUG=${APP_DEBUG}
+      - JSON_CONFIGURATION_DIR=${JSON_CONFIGURATION_DIR}
+      - CAN_POST_AUTOIMPORT=${CAN_POST_AUTOIMPORT}
+      - CAN_POST_FILES=${CAN_POST_FILES}
+      - IMPORT_DIR_ALLOWLIST=${IMPORT_DIR_ALLOWLIST}
+      - AUTO_IMPORT_SECRET=${AUTO_IMPORT_SECRET}
+
+  cron:
+    image: alpine
+    container_name: firefly_iii_cron
+    restart: always
+    command: ["sh", "-c", "apk add tzdata && \
+      (ln -s /usr/share/zoneinfo/$$TZ /etc/localtime || true) && \
+      echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/$$STATIC_CRON_TOKEN;echo\" \
+      | crontab - && \
+      crond -f -L /dev/stdout"]
+    networks:
+      - firefly_iii
+    depends_on:
+      - app
+    environment:
+      - TZ=${TZ}
+      - STATIC_CRON_TOKEN=${STATIC_CRON_TOKEN}
+
+volumes:
+  firefly_iii_upload:
+  firefly_iii_db:
+
+networks:
+  firefly_iii:
+    driver: bridge
